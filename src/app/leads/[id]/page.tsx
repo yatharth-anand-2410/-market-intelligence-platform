@@ -42,7 +42,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
           </Card>
           <Card title="Facts">
             <ul className="divide-y divide-line">
-              {Object.entries(lead.facts).map(([label, f]) => <FactRow key={label} label={label} fact={f} />)}
+              {Object.entries(lead.facts).map(([label, f]) => <FactRow key={label} label={label} fact={f} demo={lead.origin === "demo"} />)}
             </ul>
           </Card>
           {projects.length > 0 && (
