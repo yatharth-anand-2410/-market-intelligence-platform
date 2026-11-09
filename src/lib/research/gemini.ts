@@ -8,7 +8,7 @@ export interface GeminiClient {
   extract(text: string, sourceUrls: string[]): Promise<unknown>;
 }
 
-export const MODEL = "gemini-2.5-flash";
+export const MODEL = process.env.GEMINI_MODEL ?? "gemini-3.8-flash";
 
 const SCHEMA = {
   type: "object",
