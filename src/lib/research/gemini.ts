@@ -59,6 +59,8 @@ const SCHEMA = {
   required: ["businesses"],
 } as const;
 
+export const GROUNDING = () => process.env.GEMINI_GROUNDING === "on";
+
 const looksLikeHost = (s?: string) => !!s && /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(s);
 
 export function createGeminiClient(apiKey: string): GeminiClient {
@@ -69,10 +71,10 @@ export function createGeminiClient(apiKey: string): GeminiClient {
         model,
         contents:
           `You are a B2B market researcher for a plywood, timber, hardware and door (brand: Archwood) business in Varanasi, India. ` +
-          `Using web search, answer: ${query}\n` +
-          `List real businesses with locality, website and any publicly listed contact details, and note the project activity. ` +
-          `Only report what sources say; say when something is unknown.`,
-        config: { tools: [{ googleSearch: {} }] },
+          (GROUNDING() ? `Using web search, answer: ${query}\n` : `From your own knowledge (no web access), answer: ${query}\n`) +
+          `List businesses with locality and note project activity. ` +
+          `Never invent phone numbers, emails or websites: leave them out unless you are certain. Say when something is unknown.`,
+        config: GROUNDING() ? { tools: [{ googleSearch: {} }] } : {},
       }));
       const chunks = res.candidates?.[0]?.groundingMetadata?.groundingChunks ?? [];
       const sourceUrls: string[] = [];

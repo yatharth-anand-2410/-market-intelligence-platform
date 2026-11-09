@@ -1,4 +1,4 @@
-export type CapabilityState = "live" | "demo" | "local" | "not_implemented" | "not_connected";
+export type CapabilityState = "live" | "ungrounded" | "demo" | "local" | "not_implemented" | "not_connected";
 
 export interface Capability {
   id: string;
@@ -7,11 +7,16 @@ export interface Capability {
 }
 
 /** GEMINI_VERIFIED is set manually only after live grounding was tested end to end. */
-export function getCapabilities(env: { GEMINI_API_KEY?: string; GEMINI_VERIFIED?: string }): Capability[] {
-  const research: CapabilityState =
-    env.GEMINI_API_KEY && env.GEMINI_VERIFIED === "true" ? "live" : "not_connected";
+export function getCapabilities(env: { GEMINI_API_KEY?: string; GEMINI_VERIFIED?: string; GEMINI_GROUNDING?: string }): Capability[] {
+  const verified = !!env.GEMINI_API_KEY && env.GEMINI_VERIFIED === "true";
+  const research: CapabilityState = !verified
+    ? "not_connected"
+    : env.GEMINI_GROUNDING === "on"
+      ? "live"
+      : "ungrounded";
   return [
-    { id: "research", label: "AI research (Gemini + Google Search grounding)", state: research },
+    { id: "research", label: "AI research (Gemini)", state: research },
+    { id: "grounding", label: "Google Search grounding (source-verified facts)", state: env.GEMINI_GROUNDING === "on" && verified ? "live" : "not_connected" },
     { id: "leads", label: "Lead database", state: "demo" },
     { id: "projects", label: "Project intelligence", state: "demo" },
     { id: "scoring", label: "Lead scoring", state: "live" },
