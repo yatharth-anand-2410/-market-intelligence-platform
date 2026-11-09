@@ -6,7 +6,7 @@ Hi,
 
 Your brief asks for an intelligence system, not a chatbot or a plain CRM, and for a clear line between verified information and AI assumptions. I built a working Milestone 1 prototype so you can judge that directly:
 
-**Live demo:** https://timber-chess-masters.vercel.app
+**Live demo:** https://market-intelligence-platform-steel.vercel.app
 
 **What you can click through today**
 - Dashboard, lead database with filters and CSV export, lead detail, project intelligence
