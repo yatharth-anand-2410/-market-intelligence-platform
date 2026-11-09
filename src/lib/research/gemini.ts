@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { CATEGORIES } from "../types";
+import { withFallback } from "./fallback";
 
 export interface GeminiClient {
   /** Step 1: Google Search grounded answer. */
@@ -8,7 +9,9 @@ export interface GeminiClient {
   extract(text: string, sourceUrls: string[]): Promise<unknown>;
 }
 
-export const MODEL = process.env.GEMINI_MODEL ?? "gemini-3.8-flash";
+/** Cheapest first; later entries are fallbacks when a model is quota-limited or unavailable. */
+export const MODELS = (process.env.GEMINI_MODELS ?? "gemini-3.5-flash-lite,gemini-3.5-flash,gemini-3.8-flash")
+  .split(",").map((m) => m.trim()).filter(Boolean);
 
 const SCHEMA = {
   type: "object",
@@ -62,15 +65,15 @@ export function createGeminiClient(apiKey: string): GeminiClient {
   const ai = new GoogleGenAI({ apiKey });
   return {
     async grounded(query) {
-      const res = await ai.models.generateContent({
-        model: MODEL,
+      const res = await withFallback(MODELS, (model) => ai.models.generateContent({
+        model,
         contents:
           `You are a B2B market researcher for a plywood, timber, hardware and door (brand: Archwood) business in Varanasi, India. ` +
           `Using web search, answer: ${query}\n` +
           `List real businesses with locality, website and any publicly listed contact details, and note the project activity. ` +
           `Only report what sources say; say when something is unknown.`,
         config: { tools: [{ googleSearch: {} }] },
-      });
+      }));
       const chunks = res.candidates?.[0]?.groundingMetadata?.groundingChunks ?? [];
       const sourceUrls: string[] = [];
       const sourceHosts: string[] = [];
@@ -81,15 +84,15 @@ export function createGeminiClient(apiKey: string): GeminiClient {
       return { text: res.text ?? "", sourceUrls, sourceHosts };
     },
     async extract(text, sourceUrls) {
-      const res = await ai.models.generateContent({
-        model: MODEL,
+      const res = await withFallback(MODELS, (model) => ai.models.generateContent({
+        model,
         contents:
           `Extract businesses from this research text into JSON. category must be one of: ${CATEGORIES.join(", ")}. ` +
           `signals are integers 0-5 (relevance to a plywood/door seller, projectActivity, evidence strength, requirement potential). ` +
           `For each fact, put only URLs that appear in the text or in this list in sourceUrls; use [] when unsourced.\n` +
           `Known source URLs: ${sourceUrls.join(", ")}\n\nTEXT:\n${text}`,
         config: { responseMimeType: "application/json", responseJsonSchema: SCHEMA },
-      });
+      }));
       return JSON.parse(res.text ?? "null");
     },
   };
