@@ -2,7 +2,7 @@
 
 Internal B2B research and sales-intelligence prototype for a plywood, timber, hardware and doors business in Varanasi, India.
 
-**Live demo:** https://market-intelligence-platform-steel.vercel.app
+**Live demo:** https://timber-chess-masters.vercel.app
 
 ## What is real, and what is not
 
